@@ -1,0 +1,94 @@
+.card {
+  background: rgba(255,255,255,0.82);
+  border: 1px solid rgba(223, 214, 204, 0.9);
+  border-radius: 20px;
+  padding: 18px 20px;
+  transition: transform .25s var(--ease), border-color .25s var(--ease);
+  animation: slideIn .4s var(--ease) both;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 12px 26px rgba(103, 91, 74, 0.07);
+}
+.card:hover { transform: translateX(3px); border-color: rgba(219, 193, 161, 0.9); }
+
+.top {
+  border-color: rgba(228, 181, 126, 0.48);
+  background: linear-gradient(135deg, #fffaf4, rgba(255,255,255,0.9));
+}
+.top::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 3px; height: 100%;
+  background: linear-gradient(to bottom, var(--accent), rgba(243, 175, 116, 0.2));
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.left { display: flex; align-items: center; flex: 1; gap: 0; }
+
+.rank {
+  width: 24px; height: 24px;
+  background: #f6efe6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .7rem;
+  font-weight: 700;
+  color: var(--muted);
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+.rankTop { background: rgba(223, 111, 31, 0.12); color: var(--accent); }
+
+.name {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: rgba(223, 111, 31, 0.08);
+  border: 1px solid rgba(223, 111, 31, 0.16);
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: 8px;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.pct {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+}
+.pctTop { font-size: 1.2rem; }
+
+.track {
+  height: 4px;
+  background: #eee6dc;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 4px;
+  width: 0%;
+}
+.top .fill { box-shadow: 0 0 8px rgba(223, 111, 31, 0.24); }
