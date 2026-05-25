@@ -14,6 +14,7 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV MODEL_DEVICE=cpu
+ENV PORT=10000
 
 COPY requirements_api.txt ./
 RUN pip install --no-cache-dir --upgrade pip \
@@ -24,6 +25,6 @@ COPY exports ./exports
 COPY frontend ./frontend
 COPY --from=frontend-build /app/frontend/dist ./frontend/dist
 
-EXPOSE 8000
+EXPOSE 10000
 
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn api.main:app --host 0.0.0.0 --port ${PORT}"]
