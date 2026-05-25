@@ -4,7 +4,7 @@
  * Si cambias el puerto del backend, solo editas aquí.
  */
 
-const BASE = import.meta.env.VITE_API_BASE_URL || '/';
+const BASE = (import.meta.env.VITE_API_BASE_URL || '/api/').replace(/\/?$/, '/');
 
 /**
  * Envía una imagen al backend y devuelve los resultados de clasificación.

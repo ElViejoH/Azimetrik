@@ -1,0 +1,5 @@
+services:
+  - type: web
+    name: azimetrik
+    runtime: docker
+    plan: free

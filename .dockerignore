@@ -1,0 +1,15 @@
+.git
+.gitignore
+.venv
+.vscode
+__pycache__
+*.pyc
+data
+checkpoints
+logs
+logs_rebalanced
+logs_sampler_only
+uploads
+frontend/node_modules
+frontend/dist
+checkpoints.rar

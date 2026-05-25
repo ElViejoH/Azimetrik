@@ -7,8 +7,7 @@ export default defineConfig({
     port: 3000,
     // Proxy para evitar CORS en desarrollo
     proxy: {
-      '/predict': 'http://localhost:8000',
-      '/health':  'http://localhost:8000',
+      '/api': 'http://localhost:8000',
     }
   }
 })

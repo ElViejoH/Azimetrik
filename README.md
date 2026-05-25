@@ -1,149 +1,85 @@
-# Fashion Detector — ResNet50 + DeepFashion
+# Azimetrik
 
-Clasificación de prendas de moda usando ResNet50 con fine-tuning sobre el dataset **DeepFashion** (Category and Attribute Prediction Benchmark).
+Aplicación web para clasificar prendas con un modelo entrenado sobre DeepFashion y organizar un closet digital desde una interfaz React.
 
----
+## Qué incluye
 
-## Estructura
+- `frontend/`: app `React + Vite`.
+- `api/`: backend `FastAPI` para inferencia.
+- `exports/base_model/`: modelo exportado a `TorchScript` y metadata.
+- `Dockerfile`: despliegue en un solo servicio.
+- `render.yaml`: blueprint básico para Render.
 
+## Arquitectura de despliegue
+
+La app quedó preparada para desplegarse como un único servicio:
+
+- `FastAPI` expone `GET /api/health` y `POST /api/predict`.
+- El mismo backend sirve el frontend compilado desde `frontend/dist`.
+- La inferencia usa `exports/base_model/fashion_detector_base.ts` y `exports/base_model/metadata.json`.
+- En producción ya no depende de `data/raw/` ni de `checkpoints/`.
+
+## Desarrollo local
+
+### Backend
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements_api.txt
+.\.venv\Scripts\python.exe -m uvicorn api.main:app --reload --port 8000
 ```
-fashion-detector/
-├── data/
-│   └── raw/                  ← Dataset DeepFashion aquí
-├── src/
-│   ├── model.py              ← Arquitectura ResNet50 fine-tuned
-│   ├── dataset.py            ← DeepFashionDataset + transforms
-│   ├── train.py              ← Entrenamiento en 2 fases
-│   ├── evaluate.py           ← Métricas + matriz de confusión
-│   └── predict.py            ← Inferencia por imagen o carpeta
-├── checkpoints/              ← Pesos guardados automáticamente
-├── logs/                     ← TensorBoard logs
-├── config.yaml               ← Todos los hiperparámetros
-└── requirements.txt
+
+### Frontend
+
+```powershell
+cd frontend
+npm install
+npm run dev
 ```
 
----
+La app web queda en `http://localhost:3000` y usa proxy a `http://localhost:8000/api`.
 
-## Instalación
+## Despliegue con Docker
 
 ```bash
-# 1. Crear entorno virtual
-python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
-
-# 2. Instalar dependencias
-pip install -r requirements.txt
+docker build -t azimetrik .
+docker run -p 8000:8000 azimetrik
 ```
 
-### GPU en Windows
+Luego abre `http://localhost:8000`.
 
-Este proyecto ya fue probado con una **NVIDIA GeForce RTX 4060** usando
-PyTorch con CUDA en `.venv`.
+## Despliegue en Render
 
-```powershell
-# Activar el entorno local del proyecto
-.\.venv\Scripts\activate
+1. Conecta el repositorio `ElViejoH/Azimetrik`.
+2. Render detectará `render.yaml`.
+3. Crea el servicio web usando `Dockerfile`.
+4. Cuando termine el build, la app quedará sirviendo frontend + API en el mismo dominio.
 
-# Verificar que PyTorch ve la GPU
-python -c "import torch; print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0))"
+## Variables opcionales
 
-# Entrenar
-python src\train.py
-```
+- `MODEL_PATH`: ruta al archivo `TorchScript`.
+- `MODEL_METADATA_PATH`: ruta al `metadata.json`.
+- `MODEL_DEVICE`: por defecto `cpu`.
 
-Si necesitas reconstruir el entorno desde cero:
+## Endpoints
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install --upgrade pip
-.\.venv\Scripts\python.exe -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-```
+- `GET /api/health`
+- `POST /api/predict?top_k=5`
 
----
+Tipos aceptados: `jpg`, `jpeg`, `png`, `webp`.
 
-## Dataset
+## Notas del modelo
 
-1. Solicita acceso en: http://mmlab.ie.cuhk.edu.hk/projects/DeepFashion.html
-2. Descarga el **Category and Attribute Prediction Benchmark**
-3. Extrae en `data/raw/` con esta estructura:
-
-```
-data/raw/
-├── img/
-├── Anno_coarse/
-│   ├── list_category_img.txt
-│   └── list_category_cloth.txt
-└── Eval/
-    └── list_eval_partition.txt
-```
-
----
+- Backbone base: `ResNet50`.
+- `50` categorías de DeepFashion.
+- Mejor validación registrada: `0.650225`.
+- Artefacto exportado listo para inferencia: `exports/base_model/fashion_detector_base.ts`.
 
 ## Entrenamiento
 
-```bash
-# Desde la raíz del proyecto
-python src/train.py
-```
+El pipeline original de entrenamiento y evaluación se mantiene en `src/`:
 
-El proceso se divide en dos fases automáticamente:
+- `src/train.py`
+- `src/evaluate.py`
+- `src/export_model.py`
 
-| Fase | Capas activas | Optimizer | Epochs | LR |
-|------|--------------|-----------|--------|----|
-| 1    | Solo `fc`    | Adam      | 5      | 1e-3 |
-| 2    | `layer3` + `layer4` + `fc` | SGD + Cosine | 20 | 1e-4 |
-
-Monitoreo en tiempo real:
-```bash
-tensorboard --logdir logs/
-```
-
----
-
-## Evaluación
-
-```bash
-python src/evaluate.py
-```
-
-Genera en `logs/`:
-- `classification_report.txt` — Precision, Recall, F1 por clase
-- `confusion_matrix.png` — Matriz de confusión visual
-
----
-
-## 🔍 Inferencia
-
-```bash
-# Una imagen
-python src/predict.py --image path/imagen.jpg --topk 5
-
-# Carpeta completa
-python src/predict.py --folder path/carpeta/
-```
-
----
-
-## Modelo
-
-```python
-ResNet50 (pretrained ImageNet)
-└── fc → Dropout(0.3) → Linear(2048, 512) → ReLU → Linear(512, 50)
-```
-
-- **50 categorías** de DeepFashion
-- Fine-tuning en 2 fases para evitar catastrofic forgetting
-- Label smoothing 0.1 + Cosine Annealing en fase 2
-- Mixed precision (AMP) si hay GPU disponible
-
----
-
-## Checklist
-
-- [ ] Descargar DeepFashion y colocar en `data/raw/`
-- [ ] `pip install -r requirements.txt`
-- [ ] Verificar DataLoader: `python src/dataset.py`
-- [ ] Entrenamiento: `python src/train.py`
-- [ ] Evaluación: `python src/evaluate.py`
-- [ ] Inferencia: `python src/predict.py --image ...`
+Ese flujo ya no es necesario para levantar la app desplegada, pero sigue disponible para reentrenar o regenerar artefactos.
